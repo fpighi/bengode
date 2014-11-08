@@ -44,6 +44,8 @@ func getEncodedValue(v interface{}) (string, *TypeNotSupportedError) {
 		return encodeString(string(x)), nil
 	case *list.List:
 		return encodeList(x)
+	case []interface{}:
+		return encodeSlice(x)
 	case map[string]interface{}:
 		return encodeDictionary(x)
 	default:
@@ -66,6 +68,20 @@ func encodeDictionary(d map[string]interface{}) (string, *TypeNotSupportedError)
 	}
 	buffer.WriteString("e")
 
+	return buffer.String(), nil
+}
+
+func encodeSlice(s []interface{}) (string, *TypeNotSupportedError) {
+	var buffer bytes.Buffer
+	buffer.WriteString("l")
+	for _, e := range s {
+		encoded, err := getEncodedValue(e)
+		if err != nil {
+			return "", err
+		}
+		buffer.WriteString(encoded)
+	}
+	buffer.WriteString("e")
 	return buffer.String(), nil
 }
 

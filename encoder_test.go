@@ -72,6 +72,15 @@ func TestEncodingList(t *testing.T) {
 	assert.Equal(t, "l5:pippoi123ee", bencodedList)
 }
 
+func TestEncodingSlice(t *testing.T) {
+	s := []interface{}{"pippo", 123}
+
+	bencodedList, err := Marshal(s)
+
+	assert.Nil(t, err)
+	assert.Equal(t, "l5:pippoi123ee", bencodedList)
+}
+
 func TestEncodingDictionaryOfInt(t *testing.T) {
 	x := map[string]interface{}{
 		"foo": 1,
