@@ -18,10 +18,10 @@ type encodeProcess struct {
 }
 
 func (e *encodeProcess) marshal(v interface{}) (err error) {
-	encoded, _ := getEncodedValue(v)
+	encoded, err := getEncodedValue(v)
 
 	e.b.WriteString(encoded)
-	return nil
+	return err
 }
 
 func (e *encodeProcess) getString() string {
@@ -43,22 +43,44 @@ func getEncodedValue(v interface{}) (string, *TypeNotSupportedError) {
 	case string:
 		return encodeString(string(x)), nil
 	case *list.List:
-		return encodeList(x), nil
+		return encodeList(x)
+	case map[string]interface{}:
+		return encodeDictionary(x)
 	default:
 		fmt.Printf("The type is %v", reflect.TypeOf(v))
 		return "", &TypeNotSupportedError{msg: "Type not supported", Type: reflect.TypeOf(v).String()}
 	}
 }
 
-func encodeList(l *list.List) string {
+func encodeDictionary(d map[string]interface{}) (string, *TypeNotSupportedError) {
+	var buffer bytes.Buffer
+	buffer.WriteString("d")
+	for k, v := range d {
+		encodedKey := encodeString(k)
+		encodedValue, err := getEncodedValue(v)
+		if err != nil {
+			return "", err
+		}
+		buffer.WriteString(encodedKey)
+		buffer.WriteString(encodedValue)
+	}
+	buffer.WriteString("e")
+
+	return buffer.String(), nil
+}
+
+func encodeList(l *list.List) (string, *TypeNotSupportedError) {
 	var buffer bytes.Buffer
 	buffer.WriteString("l")
 	for e := l.Front(); e != nil; e = e.Next() {
-		encoded, _ := getEncodedValue(e.Value)
+		encoded, err := getEncodedValue(e.Value)
+		if err != nil {
+			return "", err
+		}
 		buffer.WriteString(encoded)
 	}
 	buffer.WriteString("e")
-	return buffer.String()
+	return buffer.String(), nil
 }
 
 func encodeString(s string) string {
